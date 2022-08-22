@@ -1,4 +1,4 @@
-use super::Tool;
+use super::{Tool, caesar_enc};
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
 
@@ -12,13 +12,15 @@ struct Encryptors {
 
 impl Default for Encryptors {
     fn default() -> Self {
-        Self::from_cryptos(vec![])
+        Self::from_cryptos(vec![
+            Box::new(caesar_enc::CaesarEnc::default())
+        ])
     }
 }
 
 impl Encryptors {
     pub fn from_cryptos(cryptos: Vec<Box<dyn Tool>>) -> Self {
-        let mut open = BTreeSet::new();
+        let open = BTreeSet::new();
         Self { cryptos, open }
     }
     pub fn checkboxes(&mut self, ui: &mut Ui) -> () {
@@ -54,7 +56,7 @@ impl Default for Decryptors {
 
 impl Decryptors {
     pub fn from_decryptos(decryptos: Vec<Box<dyn Tool>>) -> Self {
-        let mut open = BTreeSet::new();
+        let open = BTreeSet::new();
         Self { decryptos, open }
     }
     pub fn checkboxes(&mut self, ui: &mut Ui) -> () {
@@ -79,7 +81,7 @@ impl Decryptors {
 
 struct Attackers {
     attacks: Vec<Box<dyn Tool>>,
-    open: BTreeSet<String>
+    open: BTreeSet<String>,
 }
 
 impl Default for Attackers {
@@ -90,7 +92,7 @@ impl Default for Attackers {
 
 impl Attackers {
     pub fn from_attacks(attacks: Vec<Box<dyn Tool>>) -> Self {
-        let mut open = BTreeSet::new();
+        let open = BTreeSet::new();
         Self { attacks, open }
     }
     pub fn checkboxes(&mut self, ui: &mut Ui) -> () {
@@ -110,8 +112,7 @@ impl Attackers {
     }
 }
 
-fn set_open(open: &mut BTreeSet<String>,
-            key: &'static str, is_open: bool) -> () {
+fn set_open(open: &mut BTreeSet<String>, key: &'static str, is_open: bool) -> () {
     if is_open {
         if !open.contains(key) {
             open.insert(key.to_owned());
@@ -121,22 +122,21 @@ fn set_open(open: &mut BTreeSet<String>,
     }
 }
 
-
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", derive(default))]
 
 pub struct SecretaryWindows {
     encryptors: Encryptors,
     decryptors: Decryptors,
-    attackers: Attackers
+    attackers: Attackers,
 }
 
 impl Default for SecretaryWindows {
     fn default() -> Self {
         Self {
-        encryptors: Default::default(),
-        decryptors: Default::default(),
-        attackers: Default::default()
+            encryptors: Default::default(),
+            decryptors: Default::default(),
+            attackers: Default::default(),
         }
     }
 }
@@ -161,6 +161,7 @@ impl SecretaryWindows {
                     "https://github.com/YamiYume/secretary",
                 );
                 ui.separator();
+                self.secretary_list_ui(ui)
             });
         self.show_windows(ctx);
     }
@@ -171,17 +172,14 @@ impl SecretaryWindows {
     }
     fn secretary_list_ui(&mut self, ui: &mut egui::Ui) {
         ScrollArea::vertical().show(ui, |ui| {
-            ui.with_layout(
-                egui::Layout::top_down_justified(egui::Align::LEFT),
-                |ui| {
-                    self.encryptors.checkboxes(ui);
-                    ui.separator();
-                    self.decryptors.checkboxes(ui);
-                    ui.separator();
-                    self.attackers.checkboxes(ui);
-                    ui.separator();
-                }
-            );
+            ui.with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
+                self.encryptors.checkboxes(ui);
+                ui.separator();
+                self.decryptors.checkboxes(ui);
+                ui.separator();
+                self.attackers.checkboxes(ui);
+                ui.separator();
+            });
         });
-    }      
+    }
 }
