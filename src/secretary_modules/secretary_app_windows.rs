@@ -36,6 +36,7 @@ impl Encryptors {
         for crypto in cryptos {
             let mut is_open = open.contains(crypto.name());
             crypto.show(ctx, &mut is_open);
+            set_open(open, crypto.name(), is_open)
         }
     }
 }
@@ -72,6 +73,7 @@ impl Decryptors {
         for decrypto in decryptos {
             let mut is_open = open.contains(decrypto.name());
             decrypto.show(ctx, &mut is_open);
+            set_open(open, decrypto.name(), is_open)
         }
     }
 }
@@ -108,6 +110,7 @@ impl Attackers {
         for attack in attacks {
             let mut is_open = open.contains(attack.name());
             attack.show(ctx, &mut is_open);
+            set_open(open, attack.name(), is_open)
         }
     }
 }
