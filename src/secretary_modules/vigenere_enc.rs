@@ -1,12 +1,12 @@
-use super::{Tool, View, EncryptTool};
+use super::{EncryptTool, Tool, View};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
-struct VigenereEnc {
+pub struct VigenereEnc {
     pub plaintext: String,
     pub ciphertext: String,
     pub key: String,
-}   
+}
 
 impl Default for VigenereEnc {
     fn default() -> Self {
@@ -34,11 +34,11 @@ impl Tool for VigenereEnc {
 }
 
 impl View for VigenereEnc {
-   fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let Self { 
+    fn ui(&mut self, ui: &mut egui::Ui) -> () {
+        let Self {
             plaintext,
-		    ciphertext,
-			key, 
+            ciphertext,
+            key,
         } = self;
         let plaintext_edit = egui::TextEdit::multiline(plaintext)
             .hint_text("Write your plaintext here")
@@ -58,14 +58,42 @@ impl View for VigenereEnc {
                 }
             });
         });
-        if plaintext_edit.response.changed() | key_edit.response.changed() {
-            if self.valid_plaintest() {
+        if plaintext_edit.response.changed() | key_edit.response.changed() & !key.is_empty() {
+            if self.valid_plaintext() {
                 ui.memory().close_popup();
                 self.update_ciphertext();
             } else {
                 ui.memory().open_popup(popup_id);
             }
         }
+        egui::popup::popup_below_widget(ui, popup_id, &plaintext_edit.response, |ui| {
+            ui.code("Unvalid plaintext, must be lowercase alphabetic");
+        });
     }
 }
 
+impl EncryptTool for VigenereEnc {
+    fn valid_plaintext(&self) -> bool {
+        self.plaintext
+            .chars()
+            .all(|c| c.is_ascii_whitespace() | c.is_ascii_lowercase())
+    }
+    fn update_ciphertext(&mut self) -> () {
+        let plaintext_whiteless: String = self
+            .plaintext
+            .chars()
+            .filter(|c| !c.is_ascii_lowercase())
+            .collect();
+        let key_vector: Vec<u32> = self
+            .key
+            .chars()
+            .map(|c| c as u32 - 96)
+            .collect::<Vec<u32>>();
+        let mut ciphertext_build = String::from("");
+        for c in plaintext_whiteless.char_indices() {
+            let position = (c.1 as u32 + &key_vector[c.0 % key_vector.len()] - 97) % 26 + 65;
+            ciphertext_build.push(char::from_u32(position).unwrap());
+        }
+        self.ciphertext = ciphertext_build;
+    }
+}

@@ -1,4 +1,4 @@
-use super::{Tool, caesar_enc};
+use super::{Tool, caesar_enc, vigenere_enc};
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
 
@@ -13,7 +13,8 @@ struct Encryptors {
 impl Default for Encryptors {
     fn default() -> Self {
         Self::from_cryptos(vec![
-            Box::new(caesar_enc::CaesarEnc::default())
+            Box::new(caesar_enc::CaesarEnc::default()),
+            Box::new(vigenere_enc::VigenereEnc::default()),
         ])
     }
 }
