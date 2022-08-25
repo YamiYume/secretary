@@ -20,7 +20,7 @@ impl Default for VigenereEnc {
 
 impl Tool for VigenereEnc {
     fn name(&self) -> &'static str {
-        " Vigenere"
+        "ﲘ Vigenere"
     }
     fn show(&mut self, ctx: &egui::Context, open: &mut bool) -> () {
         egui::Window::new(self.name())

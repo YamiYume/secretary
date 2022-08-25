@@ -1,4 +1,4 @@
-use super::{Tool, caesar_enc, vigenere_enc};
+use super::{Tool, caesar_enc, vigenere_enc, caesar_dec};
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
 
@@ -52,7 +52,9 @@ struct Decryptors {
 
 impl Default for Decryptors {
     fn default() -> Self {
-        Self::from_decryptos(vec![])
+        Self::from_decryptos(vec![
+            Box::new(caesar_dec::CaesarDec::default()),
+        ])
     }
 }
 

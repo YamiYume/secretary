@@ -1,6 +1,7 @@
 pub mod secretary_app_windows;
 pub mod caesar_enc;
 pub mod vigenere_enc;
+pub mod caesar_dec;
 
 pub use secretary_app_windows::SecretaryWindows;
 
@@ -16,4 +17,9 @@ pub trait Tool {
 pub trait EncryptTool {
     fn valid_plaintext(&self) -> bool;
     fn update_ciphertext(&mut self) -> ();
+}
+
+pub trait DecryptTool {
+    fn valid_ciphertext(&self) -> bool;
+    fn update_plaintext(&mut self) -> ();
 }
