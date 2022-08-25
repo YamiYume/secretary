@@ -152,7 +152,7 @@ impl SecretaryWindows {
     fn desktop_ui(&mut self, ctx: &Context) -> () {
         egui::SidePanel::right("secretary_menu")
             .resizable(false)
-            .default_width(145.0)
+            .default_width(160.0)
             .show(ctx, |ui| {
                 egui::trace!(ui);
                 ui.vertical_centered(|ui| {
@@ -160,10 +160,12 @@ impl SecretaryWindows {
                 });
                 ui.separator();
                 use egui::special_emojis::GITHUB;
-                ui.hyperlink_to(
-                    format!("{}  Project github", GITHUB),
-                    "https://github.com/YamiYume/secretary",
-                );
+                ui.vertical_centered(|ui| {
+                    ui.hyperlink_to(
+                        format!("{} Project github", GITHUB),
+                        "https://github.com/YamiYume/secretary",
+                    );
+                });
                 ui.separator();
                 self.secretary_list_ui(ui)
             });
@@ -177,12 +179,23 @@ impl SecretaryWindows {
     fn secretary_list_ui(&mut self, ui: &mut egui::Ui) {
         ScrollArea::vertical().show(ui, |ui| {
             ui.with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
-                self.encryptors.checkboxes(ui);
+                egui::CollapsingHeader::new("Encrypting Tools")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        self.encryptors.checkboxes(ui);
+                    });
                 ui.separator();
-                self.decryptors.checkboxes(ui);
+                egui::CollapsingHeader::new("Decrypting Tools")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        self.decryptors.checkboxes(ui);
+                    });
                 ui.separator();
-                self.attackers.checkboxes(ui);
-                ui.separator();
+                egui::CollapsingHeader::new("Attacking Tools")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        self.attackers.checkboxes(ui);
+                    });
             });
         });
     }
