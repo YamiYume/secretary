@@ -3,6 +3,7 @@ pub mod caesar_enc;
 pub mod vigenere_enc;
 pub mod caesar_dec;
 pub mod vigenere_dec;
+pub mod afin_enc;
 
 pub use secretary_app_windows::SecretaryWindows;
 
