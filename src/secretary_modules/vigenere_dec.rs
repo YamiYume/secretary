@@ -49,7 +49,7 @@ impl View for VigenereDec {
             .show(ui);
         let popup_id_key = ui.make_persistent_id("Error_popup_key");
         ui.horizontal_top(|ui| {
-            ui.add_enabled(false, egui::TextEdit::multiline(plaintext).hint_text("here"));
+            ui.add_enabled(false, egui::TextEdit::multiline(plaintext).hint_text("Here will appear yout plaintext"));
             ui.vertical_centered_justified(|ui| {
                 if ui.add(egui::Button::new("Copy")).clicked() {
                     ui.output().copied_text = plaintext.to_string();

@@ -49,7 +49,7 @@ impl View for VigenereEnc {
             .show(ui);
         let popup_id_key = ui.make_persistent_id("Error_popup_key");
         ui.horizontal_top(|ui| {
-            ui.add_enabled(false, egui::TextEdit::multiline(ciphertext).hint_text("here"));
+            ui.add_enabled(false, egui::TextEdit::multiline(ciphertext).hint_text("Here will appear you ciphertext"));
             ui.vertical_centered_justified(|ui| {
                 if ui.add(egui::Button::new("Copy")).clicked() {
                     ui.output().copied_text = ciphertext.to_string();
