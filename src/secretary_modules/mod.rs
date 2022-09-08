@@ -6,6 +6,7 @@ pub mod vigenere_dec;
 pub mod afin_enc;
 pub mod afin_dec;
 pub mod caesar_atk;
+pub mod afin_atk;
 
 pub use secretary_app_windows::SecretaryWindows;
 

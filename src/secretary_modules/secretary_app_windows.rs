@@ -1,4 +1,4 @@
-use super::{Tool, caesar_enc, vigenere_enc, caesar_dec, vigenere_dec, afin_enc, afin_dec, caesar_atk};
+use super::{Tool, caesar_enc, vigenere_enc, caesar_dec, vigenere_dec, afin_enc, afin_dec, caesar_atk, afin_atk};
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
 
@@ -96,6 +96,7 @@ impl Default for Attackers {
     fn default() -> Self {
         Self::from_attacks(vec![
             Box::new(caesar_atk::CaesarAtk::default()),
+            Box::new(afin_atk::AfinAtk::default()),
         ])
     }
 }
