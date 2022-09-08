@@ -38,45 +38,55 @@ impl View for CaesarAtk {
         );
         let popup_id = ui.make_persistent_id("ciphertext_error");
         if self.valid_ciphertext() {
-            let decrypted = self.cryptoanalisys();
-            let table = TableBuilder::new(ui)
-                .striped(true)
-                .cell_layout(egui::Layout::left_to_right(egui::Align::Min))
-                .column(Size::relative(0.8))
-                .column(Size::relative(0.1))
-                .column(Size::relative(0.1))
-                .resizable(true)
-                .header(20.0, |mut header| {
-                    header.col(|ui| {
-                        ui.heading("plaintext");
-                    });
-                    header.col(|ui| {
-                        ui.heading("key");
-                    });
-                    header.col(|ui| {
-                        ui.heading("");
-                    });
-                })
-                .body(|mut body| {
-                    for (i, [plaintext, key]) in decrypted.iter().enumerate() {
-                        body.row(20.0, |mut row| {
-                            row.col(|ui| {
-                                ui.label(plaintext);
-                            });
-                            row.col(|ui| {
-                                ui.label(key);
-                            });
-                            row.col(|ui| {
-                               if ui.add(egui::Button::new("copy")).clicked() {
-                                    ui.output().copied_text = format!("{} {}", decrypted[i][0], decrypted[i][1]);
-                                }
-                            });
+            if !self.ciphertext.is_empty() {
+                ui.memory().close_popup();
+                let decrypted = self.cryptoanalisys();
+                TableBuilder::new(ui)
+                    .striped(true)
+                    .cell_layout(egui::Layout::left_to_right(egui::Align::Min))
+                    .column(Size::relative(0.8))
+                    .column(Size::relative(0.1))
+                    .column(Size::relative(0.1))
+                    .resizable(true)
+                    .header(20.0, |mut header| {
+                        header.col(|ui| {
+                            ui.heading("plaintext");
                         });
-                    }
-                });
+                        header.col(|ui| {
+                            ui.heading("key");
+                        });
+                        header.col(|ui| {
+                            ui.heading("");
+                        });
+                    })
+                    .body(|mut body| {
+                        for (i, [plaintext, key]) in decrypted.iter().enumerate() {
+                            body.row(20.0, |mut row| {
+                                row.col(|ui| {
+                                    ui.label(plaintext);
+                                });
+                                row.col(|ui| {
+                                    ui.label(key);
+                                });
+                                row.col(|ui| {
+                                   if ui.add(egui::Button::new("copy")).clicked() {
+                                        ui.output().copied_text = format!(
+                                            "{} {}",
+                                            decrypted[i][0],
+                                            decrypted[i][1]
+                                        );
+                                    }
+                                });
+                            });
+                        }
+                    });
+            }
         } else {
             ui.memory().open_popup(popup_id);
         }
+        egui::popup_below_widget(ui, popup_id, &ciphertext_edit, |ui| {
+            ui.code("Unvalid ciphertext, must be single word uppercase")
+        });
     }
 }
 
