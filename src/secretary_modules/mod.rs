@@ -5,6 +5,7 @@ pub mod caesar_dec;
 pub mod vigenere_dec;
 pub mod afin_enc;
 pub mod afin_dec;
+pub mod caesar_atk;
 
 pub use secretary_app_windows::SecretaryWindows;
 
@@ -25,4 +26,13 @@ pub trait EncryptTool {
 pub trait DecryptTool {
     fn valid_ciphertext(&self) -> bool;
     fn update_plaintext(&mut self) -> ();
+}
+
+pub trait AttackTool {
+    fn ciphertext(&self) -> &str;
+    fn valid_ciphertext(&self) -> bool {
+        self.ciphertext()
+            .chars()
+            .all(|c| c.is_ascii_uppercase())
+    }
 }
