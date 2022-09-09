@@ -7,6 +7,7 @@ pub mod afin_enc;
 pub mod afin_dec;
 pub mod caesar_atk;
 pub mod afin_atk;
+pub mod perm_enc;
 
 pub use secretary_app_windows::SecretaryWindows;
 

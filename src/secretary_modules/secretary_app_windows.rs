@@ -1,4 +1,4 @@
-use super::{Tool, caesar_enc, vigenere_enc, caesar_dec, vigenere_dec, afin_enc, afin_dec, caesar_atk, afin_atk};
+use super::{Tool, caesar_enc, vigenere_enc, caesar_dec, vigenere_dec, afin_enc, afin_dec, caesar_atk, afin_atk, perm_enc};
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
 
@@ -15,7 +15,8 @@ impl Default for Encryptors {
         Self::from_cryptos(vec![
             Box::new(caesar_enc::CaesarEnc::default()),
             Box::new(vigenere_enc::VigenereEnc::default()),
-            Box::new(afin_enc::AfinEnc::default())
+            Box::new(afin_enc::AfinEnc::default()),
+            Box::new(perm_enc::PermEnc::default())
         ])
     }
 }
