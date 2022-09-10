@@ -1,11 +1,11 @@
-use super::{EncryptTool, Tool, View};
+use super::{Tool, View};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
 pub struct AfinEnc {
     pub plaintext: String,
     pub ciphertext: String,
-    pub key: [u32; 2],
+    pub key: Vec<u8>,
 }
 
 impl Default for AfinEnc {
@@ -13,7 +13,7 @@ impl Default for AfinEnc {
         Self {
             plaintext: String::from(""),
             ciphertext: String::from(""),
-            key: [1, 0],
+            key: vec![1, 1],
         }
     }
 }
@@ -35,89 +35,50 @@ impl Tool for AfinEnc {
 
 impl View for AfinEnc {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let Self {
-            plaintext,
-            ciphertext,
-            key,
-        } = self;
-        let plaintext_edit = egui::TextEdit::multiline(plaintext)
-            .hint_text("Write your plaintext here")
-            .show(ui);
-        let popup_id_plaintext = ui.make_persistent_id("Error_popup_plaintext");
-        let key_selector_0 = ui.add(egui::Slider::new(&mut key[0], 0..=26)
+        let (plaintext_edit, plain_error) = super::plaintext_input(&mut self.plaintext, ui);
+        let key_selector_0 = ui.add(egui::Slider::new(&mut self.key[0], 1..26)
             .text("A key"));
-        let key_selector_1 = ui.add(egui::Slider::new(&mut key[1], 0..=26)
+        let key_selector_1 = ui.add(egui::Slider::new(&mut self.key[1], 1..26)
             .text("B key"));
-        let popup_id_key= ui.make_persistent_id("Error_popup_key");
-        ui.horizontal_top(|ui| {
-            ui.add_enabled(
-                false,
-                egui::TextEdit::multiline(ciphertext)
-                    .hint_text("Here will appear your ciphertext")
-            );
-            ui.vertical_centered_justified(|ui| {
-                if ui.add(egui::Button::new("Copy")).clicked() {
-                    ui.output().copied_text = ciphertext.to_string();
-                }
-                if ui.add(egui::Button::new("Copy Key")).clicked() {
-                    ui.output().copied_text =
-                        format!("{} {}", key[0].to_string(), key[1].to_string());
-                }
-            });
-        });
-        if (plaintext_edit.response.changed()
-            || key_selector_0.changed()
-            || key_selector_1.changed())
-            && !plaintext.is_empty()
-        {
+        let key_error= ui.make_persistent_id("key_error");
+        
+        super::ciphertext_output(&mut self.ciphertext, self.key, ui);
+                
+        if (plaintext_edit.response.changed() || key_selector_0.changed() || key_selector_1.changed()) 
+            && !self.plaintext.is_empty() {
             let key_is_valid = self.valid_key();
-            let plaintext_is_valid = self.valid_plaintext();
+            let plaintext_is_valid = super::valid_plaintext(&self.plaintext);
+
             if plaintext_is_valid && key_is_valid {
                 ui.memory().close_popup();
                 self.update_ciphertext();
             } else if key_is_valid {
-                ui.memory().open_popup(popup_id_plaintext);
+                ui.memory().open_popup(plain_error);
             } else {
-                ui.memory().open_popup(popup_id_key);
+                ui.memory().open_popup(key_error);
             }
         }
-        egui::popup::popup_below_widget(ui, popup_id_plaintext, &plaintext_edit.response, |ui| {
-            ui.code("Unvalid plaintext, plaintext must be lowercase alphabetic");
-        });
-        egui::popup_below_widget(ui, popup_id_key, &key_selector_1, |ui| {
-            ui.code("Unvalid A key, must be cooprime with 26");
-        });
-    }
-}
-
-impl EncryptTool for AfinEnc {
-    fn valid_plaintext(&self) -> bool {
-        self.plaintext
-            .chars()
-            .all(|c| c.is_ascii_whitespace() | c.is_ascii_lowercase())
-    }
-    fn update_ciphertext(&mut self) -> () {
-        let plaintext_whiteless: String = self
-            .plaintext
-            .chars()
-            .filter(|c| !c.is_ascii_whitespace())
-            .collect();
-        let mut ciphertext_build = String::from("");
-        for c in plaintext_whiteless.chars() {
-            let position = ((c as u32 - 97) * self.key[0] + self.key[1]) % 26 + 65;
-            ciphertext_build.push(char::from_u32(position).unwrap());
-        }
-        self.ciphertext = ciphertext_build;
+        super::error_popup(plain_error, &plaintext_edit, ui, "plaintext must be lowecase only");
     }
 }
 
 impl AfinEnc {
-    fn valid_key(&self) -> bool {
-        if self.key[0] == 0 {
-            return true;
-        } else {
-            return self.key[0] % 13 != 0 && self.key[0] % 2 != 0
+    fn update_ciphertext(&mut self) -> () {
+        let mut new_ciphertext = String::from("");
+        for c in super::whiteless(&self.plaintext).chars() {
+            new_ciphertext.push(self.char_cipher(c, self.key));
         }
+        self.ciphertext = new_ciphertext;
+    }
+
+    fn char_cipher(c: char, key: Vec<u8>) -> char {
+        char::from_u32(
+            ((c as u32 - 97) * key[0] + key[1]) % 26 + 65
+        ).unwrap()
+    }
+
+    fn valid_key(&self) -> bool {
+        return self.key[0] % 13 != 0 && self.key[0] % 2 != 0
     }
 }
 

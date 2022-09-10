@@ -1,4 +1,4 @@
-use super::{DecryptTool, Tool, View};
+use super::{Tool, View};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
@@ -35,73 +35,53 @@ impl Tool for VigenereDec {
 
 impl View for VigenereDec {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let Self {
-            plaintext,
-            ciphertext,
-            key,
-        } = self;
-        let ciphertext_edit = egui::TextEdit::multiline(ciphertext)
-            .hint_text("Write your ciphertext here")
-            .show(ui);
-        let popup_id_ciphertext = ui.make_persistent_id("Error_popup_ciphertext");
-        let key_edit = egui::TextEdit::singleline(key)
-            .hint_text("Write your key here")
-            .show(ui);
-        let popup_id_key = ui.make_persistent_id("Error_popup_key");
-        ui.horizontal_top(|ui| {
-            ui.add_enabled(false, egui::TextEdit::multiline(plaintext).hint_text("Here will appear yout plaintext"));
-            ui.vertical_centered_justified(|ui| {
-                if ui.add(egui::Button::new("Copy")).clicked() {
-                    ui.output().copied_text = plaintext.to_string();
-                }
-                if ui.add(egui::Button::new("Copy Key")).clicked() {
-                    ui.output().copied_text = key.to_string();
-                }
-            });
-        });
-        if (ciphertext_edit.response.changed() || key_edit.response.changed()) && (!key.is_empty() && !ciphertext.is_empty()) {
-            let ciphertext_is_valid = self.valid_ciphertext();
+        let (ciphertext_edit, cipher_error) = super::ciphertext_input(&mut self.ciphertext, ui);
+        let (key_edit, key_error) = super::key_input(&mut self.key, ui);
+
+        super::plaintext_output(&mut self.plaintext, vec![self.key], ui);
+
+        if (ciphertext_edit.changed() || key_edit.changed()) 
+        && (!self.key.is_empty() && !self.ciphertext.is_empty()) {
+
+            let ciphertext_is_valid = super::valid_ciphertext(&self.ciphertext);
             let key_is_valid = self.valid_key();
+
             if ciphertext_is_valid && key_is_valid{
                 ui.memory().close_popup();
                 self.update_plaintext();
             } else if !ciphertext_is_valid{
-                ui.memory().open_popup(popup_id_ciphertext);
+                ui.memory().open_popup(cipher_error);
             } else {
-                ui.memory().open_popup(popup_id_key);
+                ui.memory().open_popup(key_error);
             }
         }
-        egui::popup::popup_below_widget(ui, popup_id_ciphertext, &ciphertext_edit.response, |ui| {
-            ui.code("Unvalid ciphertext, ciphertext must be uppercase single word");
-        });
-        egui::popup::popup_below_widget(ui, popup_id_key, &key_edit.response, |ui| {
-            ui.code("Unvalid key, key must be lowercase single word");
-        });
-    }
-}
-
-impl DecryptTool for VigenereDec {
-    fn valid_ciphertext(&self) -> bool {
-        self.ciphertext
-            .chars()
-            .all(|c| c.is_ascii_uppercase())
-    }
-    fn update_plaintext(&mut self) -> () {
-        let key_vector: Vec<i32> = self
-            .key
-            .chars()
-            .map(|c| c as i32 - 96)
-            .collect::<Vec<i32>>();
-        let mut plaintext_build = String::from("");
-        for c in self.ciphertext.char_indices() {
-            let position = (c.1 as i32 - &key_vector[c.0 % key_vector.len()] - 65).rem_euclid(26) + 97;
-            plaintext_build.push(char::from_u32(position as u32).unwrap());
-        }
-        self.plaintext = plaintext_build;
+        super::error_popup(cipher_error, &ciphertext_edit, ui, "ciphertext  must be single word uppercase");
+        super::error_popup(key_error, &key_edit, ui, "key must be single word lowecase");
     }
 }
 
 impl VigenereDec {
+    fn update_plaintext(&mut self) -> () {
+        let key_vector: Vec<i32> = self
+            .key
+            .chars()
+            .map(|c| c as i8 - 96)
+            .collect();
+        let mut new_plaintext = String::from("");
+        for (i, c) in self.ciphertext.char_indices() {
+            new_plaintext.push(
+                self.char_decipher(c, key_vector[i % key_vector.len()])
+            );
+        }
+        self.plaintext = new_plaintext;
+    }
+
+    fn char_decipher(c: char, key: i8) -> char {
+        char::from_u32(
+            (c as i32 - key - 65).rem_euclid(26) + 97 as u32
+        ).unwrap()
+    }
+
     fn valid_key(&self) -> bool {
         self.key
             .chars()

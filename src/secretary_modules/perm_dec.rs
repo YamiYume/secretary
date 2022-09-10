@@ -1,29 +1,27 @@
-use super::{EncryptTool, Tool, View};
-use std::collections::HashSet;
+use super::{DecryptTool, Tool, View};
+use std::collections::{HashMap, HashSet};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
-pub struct PermEnc {
+pub struct PermDec {
     pub plaintext: String,
     pub ciphertext: String,
     pub key: String,
-    pub permutation: Vec<u8>,
 }
 
-impl Default for PermEnc {
+impl Default for PermDec {
     fn default() -> Self {
         Self {
             plaintext: String::from(""),
             ciphertext: String::from(""),
             key: String::from(""),
-            permutation: vec!()
         }
     }
 }
 
-impl Tool for PermEnc {
+impl Tool for PermDec {
     fn name(&self) -> &'static str {
-        "ﲘ Permutation"
+        "ﲙ  Permutation"
     }
     fn show(&mut self, ctx: &egui::Context, open: &mut bool) -> () {
         egui::Window::new(self.name())
@@ -36,15 +34,20 @@ impl Tool for PermEnc {
     }
 }
 
-impl View for PermEnc {
+impl View for PermDec {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let plaintext_edit = ui.add(
-            egui::TextEdit::multiline(&mut self.plaintext)
-                .hint_text("Write your plaintext here")
+        let Self {
+            plaintext,
+            ciphertext,
+            key,
+        } = self;
+        let ciphertext_edit = ui.add(
+            egui::TextEdit::multiline(ciphertext)
+                .hint_text("Write your ciphertext here")
         );
-        let plaintext_popup_id = ui.make_persistent_id("Error_popup_plaintext");
+        let ciphertext_popup_id = ui.make_persistent_id("Error_popup_ciphertext");
         let key_edit = ui.add(
-            egui::TextEdit::multiline(&mut self.key)
+            egui::TextEdit::multiline(key)
                 .hint_text("Write yor key here")
         );
         let key_popup_id = ui.make_persistent_id("Error_popup_key");
@@ -84,31 +87,33 @@ impl View for PermEnc {
     }
 }
 
-impl EncryptTool for PermEnc {
-    fn update_ciphertext(&mut self) -> () {
-        let plaintext_whiteless: String = self
-            .plaintext
-            .chars()
-            .filter(|c| !c.is_ascii_whitespace())
-            .collect();
-        let mut ciphertext_build = String::from("");
+impl DecryptTool for PermDec {
+    fn update_plaintext(&mut self) -> () {
+        let mut plaintext_build = String::from("");
         let perm_map = self.perm_map();
-        for c in plaintext_whiteless.chars() {
-            ciphertext_build.push(perm_map[&c]);
+        for c in self.ciphertext.chars() {
+            plaintext_build.push(perm_map[&c]);
         }
-        self.ciphertext = ciphertext_build;
+        self.ciphertext = plaintext_build;
     }
-    fn valid_plaintext(&self) -> bool {
-        self.plaintext
+    fn valid_ciphertext(&self) -> bool {
+        self.ciphertext
             .chars()
-            .all(|c| c.is_ascii_lowercase() | c.is_ascii_whitespace())
+            .all(|c| c.is_ascii_uppercase())
     }
 }
 
-impl PermEnc {
+impl PermDec {
     fn valid_key(&self) -> bool {
-        self.key
-            .chars()
-            .all(|c| c.is_ascii_digit())
+        self.key.len() == 26
+        && self.key.chars().all(|c| c.is_lowercase())
+        && self.key.len() == HashSet::<char>::from_iter(self.key.chars()).len()
+    }
+    fn perm_map(&self) -> HashMap<char, char> {
+        let mut permutation = HashMap::new();
+        for (i, c) in (0..26).zip(self.key.chars()) {
+            permutation.insert(char::from_u32(i + 97).unwrap(), c.to_ascii_uppercase());
+        }
+        permutation
     }
 }

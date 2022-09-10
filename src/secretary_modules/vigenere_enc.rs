@@ -1,4 +1,4 @@
-use super::{EncryptTool, Tool, View};
+use super::{Tool, View};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
@@ -35,78 +35,51 @@ impl Tool for VigenereEnc {
 
 impl View for VigenereEnc {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let Self {
-            plaintext,
-            ciphertext,
-            key,
-        } = self;
-        let plaintext_edit = egui::TextEdit::multiline(plaintext)
-            .hint_text("Write your plaintext here")
-            .show(ui);
-        let popup_id_plaintext = ui.make_persistent_id("Error_popup_plaintext");
-        let key_edit = egui::TextEdit::singleline(key)
-            .hint_text("Write your key here")
-            .show(ui);
-        let popup_id_key = ui.make_persistent_id("Error_popup_key");
-        ui.horizontal_top(|ui| {
-            ui.add_enabled(false, egui::TextEdit::multiline(ciphertext).hint_text("Here will appear you ciphertext"));
-            ui.vertical_centered_justified(|ui| {
-                if ui.add(egui::Button::new("Copy")).clicked() {
-                    ui.output().copied_text = ciphertext.to_string();
-                }
-                if ui.add(egui::Button::new("Copy Key")).clicked() {
-                    ui.output().copied_text = key.to_string();
-                }
-            });
-        });
-        if (plaintext_edit.response.changed() || key_edit.response.changed()) && (!key.is_empty() && !plaintext.is_empty()) {
-            let plaintext_is_valid = self.valid_plaintext();
+        let (plaintext_edit, plain_error) = super::plaintext_input(&mut self.plaintext, ui);
+        let (key_edit, key_error) = super::key_input(&mut self.key, ui);
+
+        super::ciphertext_output(&mut self.ciphertext, vec![self.key], ui);
+
+        if (plaintext_edit.changed() || key_edit.changed()) 
+        && (!self.key.is_empty() && !self.plaintext.is_empty()) {
+
+            let plaintext_is_valid = super::valid_plaintext(&self.plaintext);
             let key_is_valid = self.valid_key();
+
             if plaintext_is_valid && key_is_valid{
                 ui.memory().close_popup();
                 self.update_ciphertext();
             } else if !plaintext_is_valid{
-                ui.memory().open_popup(popup_id_plaintext);
+                ui.memory().open_popup(plain_error);
             } else {
-                ui.memory().open_popup(popup_id_key);
+                ui.memory().open_popup(key_error);
             }
         }
-        egui::popup::popup_below_widget(ui, popup_id_plaintext, &plaintext_edit.response, |ui| {
-            ui.code("Unvalid plaintext, plaintext must be lowercase alphabetic");
-        });
-        egui::popup::popup_below_widget(ui, popup_id_key, &key_edit.response, |ui| {
-            ui.code("Unvalid key, key must be lowercase single word");
-        });
-    }
-}
-
-impl EncryptTool for VigenereEnc {
-    fn valid_plaintext(&self) -> bool {
-        self.plaintext
-            .chars()
-            .all(|c| c.is_ascii_whitespace() | c.is_ascii_lowercase())
-    }
-    fn update_ciphertext(&mut self) -> () {
-        let plaintext_whiteless: String = self
-            .plaintext
-            .chars()
-            .filter(|c| !c.is_ascii_whitespace())
-            .collect();
-        let key_vector: Vec<u32> = self
-            .key
-            .chars()
-            .map(|c| c as u32 - 96)
-            .collect::<Vec<u32>>();
-        let mut ciphertext_build = String::from("");
-        for c in plaintext_whiteless.char_indices() {
-            let position = (c.1 as u32 + &key_vector[c.0 % key_vector.len()] - 97) % 26 + 65;
-            ciphertext_build.push(char::from_u32(position).unwrap());
-        }
-        self.ciphertext = ciphertext_build;
+        super::error_popup(plain_error, &plaintext_edit, ui, "plaintext must be lowecase only");
+        super::error_popup(key_error, &key_edit, ui, "key must be single word lowecase");
     }
 }
 
 impl VigenereEnc {
+    fn update_ciphertext(&mut self) -> () {
+        let key_vector: Vec<u32> = self
+            .key
+            .chars()
+            .map(|c| c as u8 - 96)
+            .collect();
+        let mut new_ciphertext = String::from("");
+        for (i, c) in super::whiteless(&self.plaintext).char_indices() {
+            new_ciphertext.push(
+                self.char_cipher(c, key_vector[i % key_vector.len()])
+            );
+        }
+        self.ciphertext = new_ciphertext;
+    }
+
+    fn char_cipher(c: char, key: u8) -> char {
+        char::from_u32((c as u32 + key - 97) % 26 + 65).unwrap()
+    }
+
     fn valid_key(&self) -> bool {
         self.key
             .chars()
