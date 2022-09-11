@@ -1,8 +1,9 @@
-use super::{Tool};
+use super::Tool;
 use super::{
     caesar_enc::CaesarEnc, caesar_dec::CaesarDec, caesar_atk::CaesarAtk,
     afin_enc::AfinEnc, afin_dec::AfinDec, afin_atk::AfinAtk,
     vigenere_enc::VigenereEnc, vigenere_dec::VigenereDec,
+    perm_enc::PermEnc,
 };
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
@@ -21,6 +22,7 @@ impl Default for Encryptors {
             Box::new(CaesarEnc::default()),
             Box::new(VigenereEnc::default()),
             Box::new(AfinEnc::default()),
+            Box::new(PermEnc::default()),
         ])
     }
 }

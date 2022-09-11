@@ -1,4 +1,4 @@
-use super::{Tool, View, AttackTool};
+use super::{Tool, View};
 use egui_extras::{TableBuilder, Size};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
@@ -32,12 +32,8 @@ impl Tool for AfinAtk {
 
 impl View for AfinAtk {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let ciphertext_edit = ui.add(
-            egui::TextEdit::multiline(&mut self.ciphertext)
-                .hint_text("Write your ciphertext here")
-        );
-        let popup_id = ui.make_persistent_id("ciphertext_error");
-        if self.valid_ciphertext() {
+        let (ciphertext_edit, cipher_error) = super::ciphertext_input(&mut self.ciphertext, ui);
+        if super::valid_ciphertext(&self.ciphertext) {
             if !self.ciphertext.is_empty() {
                 ui.memory().close_popup();
                 let decrypted = self.cryptoanalisys();
@@ -90,17 +86,11 @@ impl View for AfinAtk {
                     });
             }
         } else {
-            ui.memory().open_popup(popup_id);
+            ui.memory().open_popup(cipher_error);
         }
-        egui::popup_below_widget(ui, popup_id, &ciphertext_edit, |ui| {
+        egui::popup_below_widget(ui, cipher_error, &ciphertext_edit, |ui| {
             ui.code("Unvalid ciphertext, must be single word uppercase")
         });
-    }
-}
-
-impl AttackTool for AfinAtk {
-    fn ciphertext(&self) -> &str {
-        &self.ciphertext
     }
 }
 
@@ -109,7 +99,7 @@ impl AfinAtk {
         let mut posibilities = Vec::new();
         for key_1 in (0..=26).filter(|x| (x % 13 != 0) && (x % 2 != 0)) {
             for key_2 in 0..=26 {
-                let plaintext = decipher(self.ciphertext(), key_1, key_2);
+                let plaintext = decipher(&self.ciphertext, key_1, key_2);
                 posibilities.push([plaintext, key_1.to_string(), key_2.to_string()])
             }
         }
@@ -120,24 +110,8 @@ impl AfinAtk {
 fn decipher(text: &str, key_1: i32, key_2: i32) -> String {
     let mut plaintext = String::from("");
     for c in text.chars() {
-        let position = ((c as i32 - key_2 - 65) * mod_inv(key_1, 26)).rem_euclid(26) + 97;
+        let position = ((c as i32 - key_2 - 65) * super::mod_inv(key_1, 26)).rem_euclid(26) + 97;
         plaintext.push(char::from_u32(position as u32).unwrap());
     }
     plaintext
-}
-
-
-fn mod_inv(value: i32, module: i32) -> i32 {
-    let mut mn = (module, value);
-    let mut xy = (0, 1);
-  
-    while mn.1 != 0 {
-        xy = (xy.1, xy.0 - (mn.0 / mn.1) * xy.1);
-        mn = (mn.1, mn.0 % mn.1);
-    }
-  
-    while xy.0 < 0 {
-        xy.0 += module;
-    }
-    xy.0
 }

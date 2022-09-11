@@ -5,7 +5,7 @@ use super::{Tool, View};
 pub struct CaesarDec {
     pub plaintext: String,
     pub ciphertext: String,
-    pub key: u8,
+    pub key: i32,
 }
 
 impl Default for CaesarDec {
@@ -36,11 +36,11 @@ impl Tool for CaesarDec {
 impl View for CaesarDec {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
         let (ciphertext_edit, cipher_error) = super::ciphertext_input(&mut self.ciphertext, ui);
-        let key_selector = ui.add(egui::Slider::new(&mut self.key, 1..26));
+        let key_selector = ui.add(egui::Slider::new(&mut self.key, 1..=25));
 
-        super::plaintext_output(&mut self.plaintext, vec![self.key], ui);
+        super::plaintext_output(&mut self.plaintext, &vec![self.key], ui);
 
-        if (ciphertext_edit.response.changed() || key_selector.changed()) && !self.ciphertext.is_empty() {
+        if (ciphertext_edit.changed() || key_selector.changed()) && !self.ciphertext.is_empty() {
             if super::valid_ciphertext(&self.ciphertext) {
                 ui.memory().close_popup();
                 self.update_plaintext();
@@ -48,7 +48,9 @@ impl View for CaesarDec {
                 ui.memory().open_popup(cipher_error);
             }
         }
-        super::error_popup(cipher_error, &ciphertext_edit, ui, "ciphertext must be single word uppercase")
+        egui::popup_below_widget(ui, cipher_error, &ciphertext_edit, |ui| {
+            ui.code("ciphertext must be single word uppercase")
+        });
     }
 }
 
@@ -56,11 +58,11 @@ impl CaesarDec {
     fn update_plaintext(&mut self) -> () {
         let mut new_plaintext = String::from("");
         for c in self.ciphertext.chars() {
-            new_plaintext.push(self.char_decipher(c, self.key));
+            new_plaintext.push(CaesarDec::char_decipher(c, self.key));
         }
         self.plaintext = new_plaintext;
     }
-    fn char_decipher(c: char, key: u8) -> char {
+    fn char_decipher(c: char, key: i32) -> char {
         char::from_u32(
             ((c as i32 - key - 65).rem_euclid(26) + 97) as u32
         ).unwrap()

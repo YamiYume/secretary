@@ -1,11 +1,12 @@
-use super::{Tool, View};
+use super::{Tool, View,
+    ciphertext_input, plaintext_output, valid_ciphertext, mod_inv};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
 pub struct AfinDec {
     pub plaintext: String,
     pub ciphertext: String,
-    pub key: Vec<i8>,
+    pub key: Vec<i32>,
 }
 
 impl Default for AfinDec {
@@ -35,20 +36,20 @@ impl Tool for AfinDec {
 
 impl View for AfinDec {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let (ciphertext_edit, cipher_error) = super::ciphertext_input(&mut self.ciphertext, ui);
-        let key_selector_a = ui.add(egui::Slider::new(&mut self.key[0], 1..26)
+        let (ciphertext_edit, cipher_error) = ciphertext_input(&mut self.ciphertext, ui);
+        let key_selector_a = ui.add(egui::Slider::new(&mut self.key[0], 1..=25)
             .text("A key"));
-        let key_selector_b = ui.add(egui::Slider::new(&mut self.key[1], 1..26)
+        let key_selector_b = ui.add(egui::Slider::new(&mut self.key[1], 1..=25)
             .text("B key"));
         let key_error= ui.make_persistent_id("key_error");
 
-        super::plaintext_output(&mut self.plaintext, self.key, ui);
+        plaintext_output(&mut self.plaintext, &self.key, ui);
 
-        if (ciphertext_edit.response.changed() || key_selector_a.changed() || key_selector_b.changed())
+        if (ciphertext_edit.changed() || key_selector_a.changed() || key_selector_b.changed())
             && !self.ciphertext.is_empty()
         {
             let key_is_valid = self.valid_key();
-            let ciphertext_is_valid = super::valid_ciphertext(&self.ciphertext);
+            let ciphertext_is_valid = valid_ciphertext(&self.ciphertext);
             if ciphertext_is_valid && key_is_valid {
                 ui.memory().close_popup();
                 self.update_plaintext();
@@ -58,8 +59,12 @@ impl View for AfinDec {
                 ui.memory().open_popup(key_error);
             }
         }
-        super::error_popup(cipher_error, &ciphertext_edit, ui, "ciphertext must be uppercase single word");
-        super::error_popup(key_error, &key_selector_a, ui, "key A must be cooprime with 26");
+        egui::popup_below_widget(ui, cipher_error, &ciphertext_edit, |ui| {
+            ui.code("ciphertext must be uppercase single word")
+        });
+        egui::popup_below_widget(ui, key_error, &key_selector_a, |ui| {
+            ui.code("key A must be cooprime with 26")
+        });
     }
 }
 
@@ -67,15 +72,15 @@ impl AfinDec {
     fn update_plaintext(&mut self) -> () {
         let mut new_plaintext = String::from("");
         for c in self.ciphertext.chars() {
-            new_plaintext.push(self.char_cipher(c, self.key));
+            new_plaintext.push(AfinDec::char_decipher(c, &self.key));
         }
         self.plaintext = new_plaintext;
     }
 
-    fn char_cipher(c: char, key: Vec<i8>) -> char {
+    fn char_decipher(c: char, key: &Vec<i32>) -> char {
         char::from_u32(
             (
-                ((c as i32 - key[1] - 65) * super::mod_inv(key[0], 26))
+                ((c as i32 - key[1] - 65) * mod_inv(key[0], 26))
                     .rem_euclid(26) + 97
             ) as u32
         ).unwrap()

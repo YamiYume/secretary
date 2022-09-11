@@ -5,7 +5,7 @@ use super::{Tool, View};
 pub struct CaesarEnc {
     pub plaintext: String,
     pub ciphertext: String,
-    pub key: u8,
+    pub key: u32,
 }
 
 impl Default for CaesarEnc {
@@ -37,9 +37,9 @@ impl View for CaesarEnc {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
 
         let (plaintext_edit, plain_error) = super::plaintext_input(&mut self.plaintext, ui);
-        let key_selector = ui.add(egui::Slider::new(&mut self.key, 1..26));
+        let key_selector = ui.add(egui::Slider::new(&mut self.key, 1..=25));
 
-        super::ciphertext_output(&mut self.ciphertext, vec![self.key], ui);
+        super::ciphertext_output(&mut self.ciphertext, &vec![self.key], ui);
 
         if (plaintext_edit.changed() || key_selector.changed()) && !self.plaintext.is_empty() {
             if super::valid_plaintext(&self.plaintext) {
@@ -57,12 +57,12 @@ impl CaesarEnc {
     fn update_ciphertext(&mut self) -> () {
         let mut new_ciphertext = String::from("");
         for c in super::whiteless(&self.plaintext).chars() {
-            new_ciphertext.push(self.char_cipher(c, self.key));
+            new_ciphertext.push(CaesarEnc::char_cipher(c, self.key));
         }
         self.ciphertext = new_ciphertext;
     }
 
-    fn char_cipher(c: char, key: u8) -> char {
+    fn char_cipher(c: char, key: u32) -> char {
         char::from_u32((c as u32 + key - 97) % 26 + 65).unwrap()
     }
 }

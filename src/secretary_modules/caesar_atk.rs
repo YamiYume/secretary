@@ -1,4 +1,4 @@
-use super::{Tool, View, AttackTool};
+use super::{Tool, View};
 use egui_extras::{TableBuilder, Size};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
@@ -32,21 +32,17 @@ impl Tool for CaesarAtk {
 
 impl View for CaesarAtk {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let ciphertext_edit = ui.add(
-            egui::TextEdit::multiline(&mut self.ciphertext)
-                .hint_text("Write your ciphertext here")
-        );
-        let popup_id = ui.make_persistent_id("ciphertext_error");
-        if self.valid_ciphertext() {
+        let (ciphertext_edit, cipher_error) = super::ciphertext_input(&mut self.ciphertext, ui);
+        if super::valid_ciphertext(&self.ciphertext) {
             if !self.ciphertext.is_empty() {
                 ui.memory().close_popup();
                 let decrypted = self.cryptoanalisys();
                 TableBuilder::new(ui)
                     .striped(true)
                     .cell_layout(egui::Layout::left_to_right(egui::Align::Min))
-                    .column(Size::relative(0.8))
-                    .column(Size::relative(0.1))
-                    .column(Size::relative(0.1))
+                    .column(Size::relative(0.7))
+                    .column(Size::relative(0.15))
+                    .column(Size::relative(0.15))
                     .resizable(true)
                     .header(20.0, |mut header| {
                         header.col(|ui| {
@@ -82,17 +78,11 @@ impl View for CaesarAtk {
                     });
             }
         } else {
-            ui.memory().open_popup(popup_id);
+            ui.memory().open_popup(cipher_error);
         }
-        egui::popup_below_widget(ui, popup_id, &ciphertext_edit, |ui| {
+        egui::popup_below_widget(ui, cipher_error, &ciphertext_edit, |ui| {
             ui.code("Unvalid ciphertext, must be single word uppercase")
         });
-    }
-}
-
-impl AttackTool for CaesarAtk {
-    fn ciphertext(&self) -> &str {
-        &self.ciphertext
     }
 }
 
@@ -100,7 +90,7 @@ impl CaesarAtk {
     fn cryptoanalisys(&self) -> Vec<[String; 2]> {
         let mut posibilities = Vec::new();
         for key in 0..=26 {
-            let plaintext = decipher(self.ciphertext(), key);
+            let plaintext = decipher(&self.ciphertext, key);
             posibilities.push([plaintext, key.to_string()])
         }
         posibilities

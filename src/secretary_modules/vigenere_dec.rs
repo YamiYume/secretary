@@ -38,7 +38,7 @@ impl View for VigenereDec {
         let (ciphertext_edit, cipher_error) = super::ciphertext_input(&mut self.ciphertext, ui);
         let (key_edit, key_error) = super::key_input(&mut self.key, ui);
 
-        super::plaintext_output(&mut self.plaintext, vec![self.key], ui);
+        super::plaintext_output(&mut self.plaintext, &vec![&self.key], ui);
 
         if (ciphertext_edit.changed() || key_edit.changed()) 
         && (!self.key.is_empty() && !self.ciphertext.is_empty()) {
@@ -65,20 +65,20 @@ impl VigenereDec {
         let key_vector: Vec<i32> = self
             .key
             .chars()
-            .map(|c| c as i8 - 96)
+            .map(|c| c as i32 - 96)
             .collect();
         let mut new_plaintext = String::from("");
         for (i, c) in self.ciphertext.char_indices() {
             new_plaintext.push(
-                self.char_decipher(c, key_vector[i % key_vector.len()])
+                VigenereDec::char_decipher(c, key_vector[i % key_vector.len()])
             );
         }
         self.plaintext = new_plaintext;
     }
 
-    fn char_decipher(c: char, key: i8) -> char {
+    fn char_decipher(c: char, key: i32) -> char {
         char::from_u32(
-            (c as i32 - key - 65).rem_euclid(26) + 97 as u32
+            ((c as i32 - key - 65).rem_euclid(26) + 97).try_into().unwrap()
         ).unwrap()
     }
 

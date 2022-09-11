@@ -1,4 +1,4 @@
-use super::{EncryptTool, Tool, View};
+use super::{Tool, View};
 use std::collections::HashSet;
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
@@ -7,7 +7,6 @@ pub struct PermEnc {
     pub plaintext: String,
     pub ciphertext: String,
     pub key: String,
-    pub permutation: Vec<u8>,
 }
 
 impl Default for PermEnc {
@@ -16,7 +15,6 @@ impl Default for PermEnc {
             plaintext: String::from(""),
             ciphertext: String::from(""),
             key: String::from(""),
-            permutation: vec!()
         }
     }
 }
@@ -38,77 +36,77 @@ impl Tool for PermEnc {
 
 impl View for PermEnc {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-        let plaintext_edit = ui.add(
-            egui::TextEdit::multiline(&mut self.plaintext)
-                .hint_text("Write your plaintext here")
-        );
-        let plaintext_popup_id = ui.make_persistent_id("Error_popup_plaintext");
-        let key_edit = ui.add(
-            egui::TextEdit::multiline(&mut self.key)
-                .hint_text("Write yor key here")
-        );
-        let key_popup_id = ui.make_persistent_id("Error_popup_key");
-        ui.horizontal_top(|ui| {
-            ui.add_enabled(
-                false,
-                egui::TextEdit::multiline(ciphertext).hint_text("Here will appear your ciphertext")
-            );
-            ui.vertical_centered_justified(|ui| {
-                if ui.add(egui::Button::new("Copy")).clicked() {
-                    ui.output().copied_text = ciphertext.to_string();
-                }
-                if ui.add(egui::Button::new("Copy Key")).clicked() {
-                    ui.output().copied_text = key.to_string();
-                }
-            });
-        });
+        let (plaintext_edit, plain_error) = super::plaintext_input(&mut self.plaintext, ui);
+        let (key_edit, key_error) = super::key_input(&mut self.key, ui);
+        
+        super::ciphertext_output(&mut self.ciphertext, &vec![&self.key], ui);
+
         if (plaintext_edit.changed() || key_edit.changed()) 
             && !self.plaintext.is_empty() && !self.key.is_empty()  {
-            let plaintext_is_valid = self.valid_plaintext();
+
+            let plaintext_is_valid = super::valid_plaintext(&self.plaintext);
             let key_is_valid = self.valid_key();
+
             if key_is_valid && plaintext_is_valid {
                 ui.memory().close_popup();
                 self.update_ciphertext();
             } else if key_is_valid {
-                ui.memory().open_popup(plaintext_popup_id);
+                ui.memory().open_popup(plain_error);
             } else {
-                ui.memory().open_popup(key_popup_id);
+                ui.memory().open_popup(key_error);
             }
         }
-        egui::popup_below_widget(ui, plaintext_popup_id, &plaintext_edit, |ui| {
+        egui::popup_below_widget(ui, plain_error, &plaintext_edit, |ui| {
             ui.code("Unvalid plaintext, must be lowercase alphabetic");
         });
-        egui::popup_below_widget(ui, key_popup_id, &key_edit, |ui| {
-            ui.code("Unvalid key, must be lowercase single word");
+        egui::popup_below_widget(ui, key_error, &key_edit, |ui| {
+            ui.code("Unvalid key, must be digits single word");
         });
-    }
-}
-
-impl EncryptTool for PermEnc {
-    fn update_ciphertext(&mut self) -> () {
-        let plaintext_whiteless: String = self
-            .plaintext
-            .chars()
-            .filter(|c| !c.is_ascii_whitespace())
-            .collect();
-        let mut ciphertext_build = String::from("");
-        let perm_map = self.perm_map();
-        for c in plaintext_whiteless.chars() {
-            ciphertext_build.push(perm_map[&c]);
-        }
-        self.ciphertext = ciphertext_build;
-    }
-    fn valid_plaintext(&self) -> bool {
-        self.plaintext
-            .chars()
-            .all(|c| c.is_ascii_lowercase() | c.is_ascii_whitespace())
     }
 }
 
 impl PermEnc {
+    fn update_ciphertext(&mut self) -> () {
+        let mut new_ciphertext = String::from("");
+        let key_vec: Vec<u32> = self.key
+            .chars()
+            .map(|x| x.to_digit(10).unwrap())
+            .collect();
+        let mut accumulator: Vec<char> = Vec::new();
+        for c in super::whiteless(&self.plaintext).chars() {
+            accumulator.push(c);
+            if accumulator.len() == key_vec.len() {
+                new_ciphertext = format!("{} {}", new_ciphertext, PermEnc::cipher_slice(accumulator, &key_vec));
+                accumulator = Vec::new();
+            }
+        }
+        if accumulator.len() != 0 {
+            accumulator.append(&mut vec!['a'; key_vec.len() - accumulator.len()]);
+            new_ciphertext = format!(
+                "{} {}",
+                new_ciphertext,
+                PermEnc::cipher_slice(accumulator, &key_vec)
+            );
+        }
+        self.ciphertext = new_ciphertext;
+    }
+
+    fn cipher_slice(slice: Vec<char>, key: &Vec<u32>) -> String {
+        let mut new_slice = Vec::new();
+        for i in key {
+            new_slice.push(slice[*i as usize - 1].to_ascii_uppercase());
+        }
+        new_slice.iter().collect::<String>()
+    }
+
+
     fn valid_key(&self) -> bool {
-        self.key
+        self.key.len() < 10
+        && self.key
             .chars()
             .all(|c| c.is_ascii_digit())
+        && self.key.len() == self.key.chars().collect::<HashSet<char>>().len()
+        && !self.key.contains("0")
+        && self.key.chars().all(|c| c.to_digit(10).unwrap() <= self.key.len() as u32)
     }
 }

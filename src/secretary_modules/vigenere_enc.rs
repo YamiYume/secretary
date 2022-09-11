@@ -38,7 +38,7 @@ impl View for VigenereEnc {
         let (plaintext_edit, plain_error) = super::plaintext_input(&mut self.plaintext, ui);
         let (key_edit, key_error) = super::key_input(&mut self.key, ui);
 
-        super::ciphertext_output(&mut self.ciphertext, vec![self.key], ui);
+        super::ciphertext_output(&mut self.ciphertext, &vec![&self.key], ui);
 
         if (plaintext_edit.changed() || key_edit.changed()) 
         && (!self.key.is_empty() && !self.plaintext.is_empty()) {
@@ -55,8 +55,12 @@ impl View for VigenereEnc {
                 ui.memory().open_popup(key_error);
             }
         }
-        super::error_popup(plain_error, &plaintext_edit, ui, "plaintext must be lowecase only");
-        super::error_popup(key_error, &key_edit, ui, "key must be single word lowecase");
+        egui::popup_below_widget(ui, plain_error, &plaintext_edit, |ui| {
+            ui.code("plaintext must be lowecase only")
+        });
+        egui::popup_below_widget(ui, key_error, &key_edit, |ui| {
+            ui.code("key must be single word lowecase")
+        });
     }
 }
 
@@ -65,18 +69,18 @@ impl VigenereEnc {
         let key_vector: Vec<u32> = self
             .key
             .chars()
-            .map(|c| c as u8 - 96)
+            .map(|c| c as u32 - 96)
             .collect();
         let mut new_ciphertext = String::from("");
         for (i, c) in super::whiteless(&self.plaintext).char_indices() {
             new_ciphertext.push(
-                self.char_cipher(c, key_vector[i % key_vector.len()])
+                VigenereEnc::char_cipher(c, key_vector[i % key_vector.len()])
             );
         }
         self.ciphertext = new_ciphertext;
     }
 
-    fn char_cipher(c: char, key: u8) -> char {
+    fn char_cipher(c: char, key: u32) -> char {
         char::from_u32((c as u32 + key - 97) % 26 + 65).unwrap()
     }
 

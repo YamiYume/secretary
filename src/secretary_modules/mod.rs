@@ -9,7 +9,6 @@ pub mod afin_atk;
 pub mod vigenere_enc;
 pub mod vigenere_dec;
 pub mod perm_enc;
-pub mod perm_dec;
 
 pub use secretary_app_windows::SecretaryWindows;
 
@@ -53,7 +52,7 @@ pub fn key_input(key: &mut String, ui: &mut egui::Ui)
 }
 
 pub fn plaintext_output<T: ToString>(
-    plaintext: &mut String, keys: Vec<T>,
+    plaintext: &mut String, keys: &Vec<T>,
     ui: &mut egui::Ui)
     -> () {
     ui.horizontal_top(|ui| {
@@ -64,7 +63,7 @@ pub fn plaintext_output<T: ToString>(
         );
         ui.vertical_centered_justified(|ui| {
             if ui.add(egui::Button::new("Copy")).clicked() {
-                ui.output().copied_text = plaintext;
+                ui.output().copied_text = plaintext.to_string();
             }
             if ui.add(egui::Button::new("Copy key")).clicked() {
                 ui.output().copied_text = keys
@@ -78,7 +77,7 @@ pub fn plaintext_output<T: ToString>(
 }
 
 pub fn ciphertext_output<T: ToString>(
-    ciphertext: &mut String, keys: Vec<T>,
+    ciphertext: &mut String, keys: &Vec<T>,
     ui: &mut egui::Ui)
     -> () {
     ui.horizontal_top(|ui| {
@@ -89,7 +88,7 @@ pub fn ciphertext_output<T: ToString>(
         );
         ui.vertical_centered_justified(|ui| {
             if ui.add(egui::Button::new("Copy")).clicked() {
-                ui.output().copied_text = ciphertext;
+                ui.output().copied_text = ciphertext.to_string();
             }
             if ui.add(egui::Button::new("Copy key")).clicked() {
                 ui.output().copied_text = keys
@@ -114,7 +113,7 @@ pub fn error_popup(
 pub fn valid_plaintext(plaintext: &String) -> bool {
     plaintext
         .chars()
-        .all(|c| c.is_ascii_lowercase | c.is_ascii_whitespace)
+        .all(|c| c.is_ascii_lowercase() | c.is_ascii_whitespace())
 }
 
 pub fn valid_ciphertext(ciphertext: &String) -> bool {
@@ -130,7 +129,7 @@ pub fn whiteless(text :&String) -> String {
     .collect()
 }
 
-pub fn mod_inv(a: i8, module: i8) -> i8 {
+pub fn mod_inv(a: i32, module: i32) -> i32 {
     let mut mn = (module, a);
     let mut xy = (0, 1);
   
