@@ -9,6 +9,8 @@ pub mod afin_atk;
 pub mod vigenere_enc;
 pub mod vigenere_dec;
 pub mod perm_enc;
+pub mod perm_dec;
+pub mod hill_enc;
 
 pub use secretary_app_windows::SecretaryWindows;
 

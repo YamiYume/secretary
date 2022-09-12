@@ -3,7 +3,8 @@ use super::{
     caesar_enc::CaesarEnc, caesar_dec::CaesarDec, caesar_atk::CaesarAtk,
     afin_enc::AfinEnc, afin_dec::AfinDec, afin_atk::AfinAtk,
     vigenere_enc::VigenereEnc, vigenere_dec::VigenereDec,
-    perm_enc::PermEnc,
+    perm_enc::PermEnc, perm_dec::PermDec,
+    hill_enc::HillEnc
 };
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
@@ -23,6 +24,7 @@ impl Default for Encryptors {
             Box::new(VigenereEnc::default()),
             Box::new(AfinEnc::default()),
             Box::new(PermEnc::default()),
+            Box::new(HillEnc::default()),
         ])
     }
 }
@@ -63,7 +65,8 @@ impl Default for Decryptors {
         Self::from_decryptos(vec![
             Box::new(CaesarDec::default()),
             Box::new(VigenereDec::default()),
-            Box::new(AfinDec::default())
+            Box::new(AfinDec::default()),
+            Box::new(PermDec::default())
         ])
     }
 }

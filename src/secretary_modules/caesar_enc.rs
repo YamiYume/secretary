@@ -49,7 +49,9 @@ impl View for CaesarEnc {
                 ui.memory().open_popup(plain_error);
             }
         }
-        super::error_popup(plain_error, &plaintext_edit, ui, "plaintext must be lowercase only");
+        egui::popup_below_widget(ui, plain_error, &plaintext_edit, |ui| {
+            ui.code("plaintext must be lowercase only")
+        });
     }
 }
 

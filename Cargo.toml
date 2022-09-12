@@ -10,4 +10,5 @@ include = ["**/*.rs"]
 egui = "0.19.0"
 eframe = "0.19.0"
 egui_extras = "0.19.0"
+image = "0.24.3"
 
