@@ -1,5 +1,7 @@
 # Secretary
-Simple cryptographic app written in Rust 
+Simple cryptographic app written in Rust
+##Installation
+Use rust toolchain of your preference, clone the repository and do Cargo Build --release, launch.
 ## Caesar Encryptor
 Simple Displacement encriptor, with a slider for key selection, it receive lowercase text entry.
 ### Use
