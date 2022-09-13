@@ -31,9 +31,15 @@ use the buttons for copy key and ciphertext, the output is single word uppercase
 ![equation](https://latex.codecogs.com/svg.image?f_{k_1k_2}(x)=&space;(x&space;*&space;k_1&space;&plus;&space;k_2)&space;%&space;26)
 ### False Positive
 There is certain possibility of false positive but it is very unlikely given the variety of letters in common words
-## Afin Decryptos
+## Afin Decryptor
 Decryptor for Afin Encryptor
 ### Use
 Insert ciphertext as single word uppercase, select your key with the sliders, it will update automatically, the Ourput will be single word in lowercase
 ### Equation
 ![equation](https://latex.codecogs.com/svg.image?f_{k_1k_2}(x)=&space;((x&space;-&space;k_2)&space;*&space;k_1^{-1})&space;%&space;26)
+## Afin Attack 
+a brute force attack fot the afin encryptor
+### use
+Introduce a ciphertext exclusively in uppercase and a single word, the table will be generated with every change, simply search the answer and can copy the answer and key by clicking the side buttons
+### Equation
+![equation](https://latex.codecogs.com/svg.image?(&space;f_(k_1k_2)(x),&space;k_1,&space;k_2&space;):&space;gcd(k1,&space;26)&space;=&space;1)
