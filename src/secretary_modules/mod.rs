@@ -1,5 +1,9 @@
 pub mod secretary_app_windows;
 
+//Using code from https://github.com/FredrikAugust/rusty-crypto with GNU GENERAL PUBLIC LICENSE
+pub mod matrix;
+pub mod euclidean_algorithm;
+
 pub mod caesar_enc;
 pub mod caesar_dec;
 pub mod caesar_atk;
@@ -11,6 +15,7 @@ pub mod vigenere_dec;
 pub mod perm_enc;
 pub mod perm_dec;
 pub mod hill_enc;
+pub mod hill_dec;
 
 pub use secretary_app_windows::SecretaryWindows;
 

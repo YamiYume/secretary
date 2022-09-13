@@ -4,7 +4,7 @@ use image::{GenericImageView, Pixel, ImageBuffer};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
-pub struct HillEnc {
+pub struct HillDec {
     pub plaintext: String,
     pub plaintext_texture: Option<egui::TextureHandle>,
     pub ciphertext_texture: Option<egui::TextureHandle>,
@@ -12,7 +12,7 @@ pub struct HillEnc {
     pub key: String,
 }
 
-impl Default for HillEnc {
+impl Default for HillDec {
     fn default() -> Self {
         Self {
             plaintext: String::from(""),
@@ -24,9 +24,9 @@ impl Default for HillEnc {
     }
 }
 
-impl Tool for HillEnc {
+impl Tool for HillDec {
     fn name(&self) -> &'static str {
-        "ﲘ Hill"
+        "ﲘ Hill d"
     }
     fn show(&mut self, ctx: &egui::Context, open: &mut bool) -> () {
         egui::Window::new(self.name())
@@ -40,7 +40,7 @@ impl Tool for HillEnc {
     }
 }
 
-impl View for HillEnc {
+impl View for HillDec {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
 
         let (plaintext_edit, plain_error) = plaintext_input(&mut self.plaintext, ui);
@@ -72,9 +72,9 @@ impl View for HillEnc {
         if !self.key.is_empty() && self.plaintext_texture.is_some() && self.ciphertext_texture.is_none(){
             if self.valid_key() {
                 ui.memory().close_popup();
-                let vec_key: Vec<u32> = self.key
+                let vec_key: Vec<i32> = self.key
                     .split_whitespace()
-                    .map(|s| u32::from_str_radix(s, 10).unwrap())
+                    .map(|s| i32::from_str_radix(s, 10).unwrap())
                     .collect();
                 let size: usize;
                 match vec_key.len() {
@@ -82,7 +82,7 @@ impl View for HillEnc {
                     16 => size = 4,
                     _ => size = 3
                 }
-                let mut key_matrix: Vec<Vec<u32>> = vec![vec![0; size]; size];
+                let mut key_matrix: Vec<Vec<i32>> = vec![vec![0; size]; size];
                 for i in 0..size {
                     for j in 0..size {
                         key_matrix[i][j] = vec_key[i * size + j];
@@ -90,7 +90,7 @@ impl View for HillEnc {
                 }
                 let image_plain = image::io::Reader::open(std::path::Path::new(&self.plaintext))
                     .unwrap().decode().unwrap();
-                let new_image_buffer = HillEnc::hill_cipher(image_plain, &key_matrix);
+                let new_image_buffer = HillDec::hill_cipher(image_plain, &key_matrix);
                 self.ciphertext_texture = Some(
                     ui.ctx().load_texture(
                         "ciphertext_image",
@@ -140,7 +140,7 @@ fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, imag
     ))
 }
 
-impl HillEnc {
+impl HillDec {
     fn valid_key(&self) -> bool {
         let mut answer = !self.key.is_empty()
         && self.key
@@ -157,7 +157,7 @@ impl HillEnc {
             .all(|x| &0 <= x && x <= &255);
         answer 
     }
-    fn hill_cipher(plain_image: image::DynamicImage, key: &Vec<Vec<u32>>) -> ImageBuffer<image::Rgba<u8>, Vec<u8>>{
+    fn hill_cipher(plain_image: image::DynamicImage, key: &Vec<Vec<i32>>) -> ImageBuffer<image::Rgba<u8>, Vec<u8>>{
         let plain_image_resize = plain_image.resize_exact(
             plain_image.dimensions().0 / key.len() as u32 * key.len() as u32,
             plain_image.dimensions().1 / key.len() as u32 * key.len() as u32,
@@ -168,15 +168,15 @@ impl HillEnc {
         let mut accumulator = Vec::new();
         for (x, y, pixel) in plain_image_resize.pixels() {
             if accumulator.len() < key.len().pow(2) {
-                accumulator.push((x, y, pixel.to_luma().channels()[0] as u32));
+                accumulator.push((x, y, pixel.to_luma().channels()[0] as i32));
             } else {
-                let mut pixel_matrix: Vec<Vec<u32>> = vec![vec![0; key.len()]; key.len()];
+                let mut pixel_matrix: Vec<Vec<i32>> = vec![vec![0; key.len()]; key.len()];
                 for i in 0..key.len() {
                     for j in 0..key.len() {
                         pixel_matrix[i][j] = accumulator[i * key.len() + j].2;
                     }
                 }
-                let mut new_pixels = matrix::multiply(pixel_matrix, key.to_vec());
+                let mut new_pixels = matrix::multiply(key.to_vec(), matrix::modular_matrix_multiplicative_inverse(&pixel_matrix, 256));
                 matrix::modulus(&mut new_pixels, 256);
                 for i in 0..key.len() {
                     for j in 0..key.len() {

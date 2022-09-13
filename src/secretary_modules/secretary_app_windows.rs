@@ -4,7 +4,7 @@ use super::{
     afin_enc::AfinEnc, afin_dec::AfinDec, afin_atk::AfinAtk,
     vigenere_enc::VigenereEnc, vigenere_dec::VigenereDec,
     perm_enc::PermEnc, perm_dec::PermDec,
-    hill_enc::HillEnc
+    hill_enc::HillEnc,
 };
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
@@ -66,7 +66,7 @@ impl Default for Decryptors {
             Box::new(CaesarDec::default()),
             Box::new(VigenereDec::default()),
             Box::new(AfinDec::default()),
-            Box::new(PermDec::default())
+            Box::new(PermDec::default()),
         ])
     }
 }
