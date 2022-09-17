@@ -1,11 +1,5 @@
+use super::caesar_enc::CaesarEnc;
 use super::Tool;
-use super::{
-    caesar_enc::CaesarEnc, caesar_dec::CaesarDec, caesar_atk::CaesarAtk,
-    afin_enc::AfinEnc, afin_dec::AfinDec, afin_atk::AfinAtk,
-    vigenere_enc::VigenereEnc, vigenere_dec::VigenereDec,
-    perm_enc::PermEnc, perm_dec::PermDec,
-    hill_enc::HillEnc,
-};
 use egui::{Context, ScrollArea, Ui};
 use std::collections::BTreeSet;
 
@@ -19,13 +13,7 @@ struct Encryptors {
 
 impl Default for Encryptors {
     fn default() -> Self {
-        Self::from_cryptos(vec![
-            Box::new(CaesarEnc::default()),
-            Box::new(VigenereEnc::default()),
-            Box::new(AfinEnc::default()),
-            Box::new(PermEnc::default()),
-            Box::new(HillEnc::default()),
-        ])
+        Self::from_cryptos(vec![Box::new(CaesarEnc::default())])
     }
 }
 
@@ -62,12 +50,7 @@ struct Decryptors {
 
 impl Default for Decryptors {
     fn default() -> Self {
-        Self::from_decryptos(vec![
-            Box::new(CaesarDec::default()),
-            Box::new(VigenereDec::default()),
-            Box::new(AfinDec::default()),
-            Box::new(PermDec::default()),
-        ])
+        Self::from_decryptos(vec![])
     }
 }
 
@@ -104,10 +87,7 @@ struct Attackers {
 
 impl Default for Attackers {
     fn default() -> Self {
-        Self::from_attacks(vec![
-            Box::new(CaesarAtk::default()),
-            Box::new(AfinAtk::default()),
-        ])
+        Self::from_attacks(vec![])
     }
 }
 

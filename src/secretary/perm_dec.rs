@@ -38,12 +38,13 @@ impl View for PermDec {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
         let (ciphertext_edit, cipher_error) = super::ciphertext_input(&mut self.ciphertext, ui);
         let (key_edit, key_error) = super::key_input(&mut self.key, ui);
-        
+
         super::plaintext_output(&mut self.plaintext, &vec![&self.key], ui);
 
-        if (ciphertext_edit.changed() || key_edit.changed()) 
-            && !self.ciphertext.is_empty() && !self.key.is_empty()  {
-
+        if (ciphertext_edit.changed() || key_edit.changed())
+            && !self.ciphertext.is_empty()
+            && !self.key.is_empty()
+        {
             let ciphertext_is_valid = PermDec::valid_ciphertext(&self.ciphertext);
             let key_is_valid = self.valid_key();
 
@@ -68,15 +69,16 @@ impl View for PermDec {
 impl PermDec {
     fn update_plaintext(&mut self) -> () {
         let mut new_plaintext = String::from("");
-        let key_vec: Vec<u32> = self.key
-            .chars()
-            .map(|x| x.to_digit(10).unwrap())
-            .collect();
+        let key_vec: Vec<u32> = self.key.chars().map(|x| x.to_digit(10).unwrap()).collect();
         let mut accumulator: Vec<char> = Vec::new();
         for c in super::whiteless(&self.ciphertext).chars() {
             accumulator.push(c);
             if accumulator.len() == key_vec.len() {
-                new_plaintext = format!("{}{}", new_plaintext, PermDec::cipher_slice(accumulator, &key_vec));
+                new_plaintext = format!(
+                    "{}{}",
+                    new_plaintext,
+                    PermDec::cipher_slice(accumulator, &key_vec)
+                );
                 accumulator = Vec::new();
             }
         }
@@ -99,18 +101,18 @@ impl PermDec {
         new_slice.iter().collect::<String>()
     }
 
-
     fn valid_key(&self) -> bool {
         self.key.len() < 10
-        && self.key
-            .chars()
-            .all(|c| c.is_ascii_digit())
-        && self.key.len() == self.key.chars().collect::<HashSet<char>>().len()
-        && !self.key.contains("0")
-        && self.key.chars().all(|c| c.to_digit(10).unwrap() <= self.key.len() as u32)
+            && self.key.chars().all(|c| c.is_ascii_digit())
+            && self.key.len() == self.key.chars().collect::<HashSet<char>>().len()
+            && !self.key.contains("0")
+            && self
+                .key
+                .chars()
+                .all(|c| c.to_digit(10).unwrap() <= self.key.len() as u32)
     }
 
-    fn valid_ciphertext(ciphertext :&String) -> bool {
+    fn valid_ciphertext(ciphertext: &String) -> bool {
         let mut answer = ciphertext
             .chars()
             .all(|c| c.is_ascii_uppercase() || c.is_ascii_whitespace());
@@ -119,7 +121,7 @@ impl PermDec {
         for slice in ciphertext.split_whitespace() {
             answer &= slice.len() == theorical_len;
             if !answer {
-                break
+                break;
             }
         }
         answer

@@ -1,5 +1,4 @@
-use super::{Tool, View,
-    ciphertext_input, plaintext_output, valid_ciphertext, mod_inv};
+use super::{ciphertext_input, mod_inv, plaintext_output, valid_ciphertext, Tool, View};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
@@ -37,11 +36,9 @@ impl Tool for AfinDec {
 impl View for AfinDec {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
         let (ciphertext_edit, cipher_error) = ciphertext_input(&mut self.ciphertext, ui);
-        let key_selector_a = ui.add(egui::Slider::new(&mut self.key[0], 1..=25)
-            .text("A key"));
-        let key_selector_b = ui.add(egui::Slider::new(&mut self.key[1], 1..=25)
-            .text("B key"));
-        let key_error= ui.make_persistent_id("key_error");
+        let key_selector_a = ui.add(egui::Slider::new(&mut self.key[0], 1..=25).text("A key"));
+        let key_selector_b = ui.add(egui::Slider::new(&mut self.key[1], 1..=25).text("B key"));
+        let key_error = ui.make_persistent_id("key_error");
 
         plaintext_output(&mut self.plaintext, &self.key, ui);
 
@@ -79,19 +76,16 @@ impl AfinDec {
 
     fn char_decipher(c: char, key: &Vec<i32>) -> char {
         char::from_u32(
-            (
-                ((c as i32 - key[1] - 65) * mod_inv(key[0], 26))
-                    .rem_euclid(26) + 97
-            ) as u32
-        ).unwrap()
+            (((c as i32 - key[1] - 65) * mod_inv(key[0], 26)).rem_euclid(26) + 97) as u32,
+        )
+        .unwrap()
     }
 
     fn valid_key(&self) -> bool {
         if self.key[0] == 0 {
             return true;
         } else {
-            return self.key[0] % 13 != 0 && self.key[0] % 2 != 0
+            return self.key[0] % 13 != 0 && self.key[0] % 2 != 0;
         }
     }
 }
-

@@ -38,12 +38,13 @@ impl View for PermEnc {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
         let (plaintext_edit, plain_error) = super::plaintext_input(&mut self.plaintext, ui);
         let (key_edit, key_error) = super::key_input(&mut self.key, ui);
-        
+
         super::ciphertext_output(&mut self.ciphertext, &vec![&self.key], ui);
 
-        if (plaintext_edit.changed() || key_edit.changed()) 
-            && !self.plaintext.is_empty() && !self.key.is_empty()  {
-
+        if (plaintext_edit.changed() || key_edit.changed())
+            && !self.plaintext.is_empty()
+            && !self.key.is_empty()
+        {
             let plaintext_is_valid = super::valid_plaintext(&self.plaintext);
             let key_is_valid = self.valid_key();
 
@@ -68,15 +69,16 @@ impl View for PermEnc {
 impl PermEnc {
     fn update_ciphertext(&mut self) -> () {
         let mut new_ciphertext = String::from("");
-        let key_vec: Vec<u32> = self.key
-            .chars()
-            .map(|x| x.to_digit(10).unwrap())
-            .collect();
+        let key_vec: Vec<u32> = self.key.chars().map(|x| x.to_digit(10).unwrap()).collect();
         let mut accumulator: Vec<char> = Vec::new();
         for c in super::whiteless(&self.plaintext).chars() {
             accumulator.push(c);
             if accumulator.len() == key_vec.len() {
-                new_ciphertext = format!("{} {}", new_ciphertext, PermEnc::cipher_slice(accumulator, &key_vec));
+                new_ciphertext = format!(
+                    "{} {}",
+                    new_ciphertext,
+                    PermEnc::cipher_slice(accumulator, &key_vec)
+                );
                 accumulator = Vec::new();
             }
         }
@@ -99,14 +101,14 @@ impl PermEnc {
         new_slice.iter().collect::<String>()
     }
 
-
     fn valid_key(&self) -> bool {
         self.key.len() < 10
-        && self.key
-            .chars()
-            .all(|c| c.is_ascii_digit())
-        && self.key.len() == self.key.chars().collect::<HashSet<char>>().len()
-        && !self.key.contains("0")
-        && self.key.chars().all(|c| c.to_digit(10).unwrap() <= self.key.len() as u32)
+            && self.key.chars().all(|c| c.is_ascii_digit())
+            && self.key.len() == self.key.chars().collect::<HashSet<char>>().len()
+            && !self.key.contains("0")
+            && self
+                .key
+                .chars()
+                .all(|c| c.to_digit(10).unwrap() <= self.key.len() as u32)
     }
 }

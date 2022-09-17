@@ -1,5 +1,5 @@
 use super::{Tool, View};
-use egui_extras::{TableBuilder, Size};
+use egui_extras::{Size, TableBuilder};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
@@ -10,7 +10,7 @@ pub struct CaesarAtk {
 impl Default for CaesarAtk {
     fn default() -> Self {
         Self {
-            ciphertext: String::from("")
+            ciphertext: String::from(""),
         }
     }
 }
@@ -65,12 +65,9 @@ impl View for CaesarAtk {
                                     ui.label(key);
                                 });
                                 row.col(|ui| {
-                                   if ui.add(egui::Button::new("copy")).clicked() {
-                                        ui.output().copied_text = format!(
-                                            "{} {}",
-                                            decrypted[i][0],
-                                            decrypted[i][1]
-                                        );
+                                    if ui.add(egui::Button::new("copy")).clicked() {
+                                        ui.output().copied_text =
+                                            format!("{} {}", decrypted[i][0], decrypted[i][1]);
                                     }
                                 });
                             });

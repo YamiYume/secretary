@@ -1,5 +1,5 @@
 use super::{Tool, View};
-use egui_extras::{TableBuilder, Size};
+use egui_extras::{Size, TableBuilder};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
@@ -10,7 +10,7 @@ pub struct AfinAtk {
 impl Default for AfinAtk {
     fn default() -> Self {
         Self {
-            ciphertext: String::from("")
+            ciphertext: String::from(""),
         }
     }
 }
@@ -72,12 +72,10 @@ impl View for AfinAtk {
                                     ui.label(key_2);
                                 });
                                 row.col(|ui| {
-                                   if ui.add(egui::Button::new("copy")).clicked() {
+                                    if ui.add(egui::Button::new("copy")).clicked() {
                                         ui.output().copied_text = format!(
                                             "{} {} {}",
-                                            decrypted[i][0],
-                                            decrypted[i][1],
-                                            decrypted[i][2]
+                                            decrypted[i][0], decrypted[i][1], decrypted[i][2]
                                         );
                                     }
                                 });

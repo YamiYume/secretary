@@ -63,8 +63,6 @@ impl CaesarDec {
         self.plaintext = new_plaintext;
     }
     fn char_decipher(c: char, key: i32) -> char {
-        char::from_u32(
-            ((c as i32 - key - 65).rem_euclid(26) + 97) as u32
-        ).unwrap()
+        char::from_u32(((c as i32 - key - 65).rem_euclid(26) + 97) as u32).unwrap()
     }
 }

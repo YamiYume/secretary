@@ -40,16 +40,16 @@ impl View for VigenereEnc {
 
         super::ciphertext_output(&mut self.ciphertext, &vec![&self.key], ui);
 
-        if (plaintext_edit.changed() || key_edit.changed()) 
-        && (!self.key.is_empty() && !self.plaintext.is_empty()) {
-
+        if (plaintext_edit.changed() || key_edit.changed())
+            && (!self.key.is_empty() && !self.plaintext.is_empty())
+        {
             let plaintext_is_valid = super::valid_plaintext(&self.plaintext);
             let key_is_valid = self.valid_key();
 
-            if plaintext_is_valid && key_is_valid{
+            if plaintext_is_valid && key_is_valid {
                 ui.memory().close_popup();
                 self.update_ciphertext();
-            } else if !plaintext_is_valid{
+            } else if !plaintext_is_valid {
                 ui.memory().open_popup(plain_error);
             } else {
                 ui.memory().open_popup(key_error);
@@ -66,16 +66,13 @@ impl View for VigenereEnc {
 
 impl VigenereEnc {
     fn update_ciphertext(&mut self) -> () {
-        let key_vector: Vec<u32> = self
-            .key
-            .chars()
-            .map(|c| c as u32 - 96)
-            .collect();
+        let key_vector: Vec<u32> = self.key.chars().map(|c| c as u32 - 96).collect();
         let mut new_ciphertext = String::from("");
         for (i, c) in super::whiteless(&self.plaintext).char_indices() {
-            new_ciphertext.push(
-                VigenereEnc::char_cipher(c, key_vector[i % key_vector.len()])
-            );
+            new_ciphertext.push(VigenereEnc::char_cipher(
+                c,
+                key_vector[i % key_vector.len()],
+            ));
         }
         self.ciphertext = new_ciphertext;
     }
@@ -85,8 +82,6 @@ impl VigenereEnc {
     }
 
     fn valid_key(&self) -> bool {
-        self.key
-            .chars()
-            .all(|c| c.is_ascii_lowercase())
+        self.key.chars().all(|c| c.is_ascii_lowercase())
     }
 }

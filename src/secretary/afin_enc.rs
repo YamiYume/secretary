@@ -36,16 +36,15 @@ impl Tool for AfinEnc {
 impl View for AfinEnc {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
         let (plaintext_edit, plain_error) = super::plaintext_input(&mut self.plaintext, ui);
-        let key_selector_0 = ui.add(egui::Slider::new(&mut self.key[0], 1..=25)
-            .text("A key"));
-        let key_selector_1 = ui.add(egui::Slider::new(&mut self.key[1], 1..=25)
-            .text("B key"));
-        let key_error= ui.make_persistent_id("key_error");
-        
+        let key_selector_0 = ui.add(egui::Slider::new(&mut self.key[0], 1..=25).text("A key"));
+        let key_selector_1 = ui.add(egui::Slider::new(&mut self.key[1], 1..=25).text("B key"));
+        let key_error = ui.make_persistent_id("key_error");
+
         super::ciphertext_output(&mut self.ciphertext, &self.key, ui);
-                
-        if (plaintext_edit.changed() || key_selector_0.changed() || key_selector_1.changed()) 
-            && !self.plaintext.is_empty() {
+
+        if (plaintext_edit.changed() || key_selector_0.changed() || key_selector_1.changed())
+            && !self.plaintext.is_empty()
+        {
             let key_is_valid = self.valid_key();
             let plaintext_is_valid = super::valid_plaintext(&self.plaintext);
 
@@ -77,13 +76,10 @@ impl AfinEnc {
     }
 
     fn char_cipher(c: char, key: &Vec<u32>) -> char {
-        char::from_u32(
-            ((c as u32 - 97) * key[0] + key[1]) % 26 + 65
-        ).unwrap()
+        char::from_u32(((c as u32 - 97) * key[0] + key[1]) % 26 + 65).unwrap()
     }
 
     fn valid_key(&self) -> bool {
-        return self.key[0] % 13 != 0 && self.key[0] % 2 != 0
+        return self.key[0] % 13 != 0 && self.key[0] % 2 != 0;
     }
 }
-

@@ -1,6 +1,6 @@
-use super::{Tool, View, plaintext_input, matrix};
+use super::{matrix, plaintext_input, Tool, View};
 use image;
-use image::{GenericImageView, Pixel, ImageBuffer};
+use image::{GenericImageView, ImageBuffer, Pixel};
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 
@@ -42,25 +42,22 @@ impl Tool for HillEnc {
 
 impl View for HillEnc {
     fn ui(&mut self, ui: &mut egui::Ui) -> () {
-
         let (plaintext_edit, plain_error) = plaintext_input(&mut self.plaintext, ui);
         if ui.add(egui::Button::new("load")).clicked() {
-            let image_load = load_image_from_path(
-                std::path::Path::new(&self.plaintext)
-            );
+            let image_load = load_image_from_path(std::path::Path::new(&self.plaintext));
             match image_load {
-                Ok(image) => self.plaintext_texture = Some(
-                    ui.ctx().load_texture(
+                Ok(image) => {
+                    self.plaintext_texture = Some(ui.ctx().load_texture(
                         "plaintext_image",
                         image,
-                        egui::TextureFilter::Linear
-                    )
-                ),
+                        egui::TextureFilter::Linear,
+                    ))
+                }
                 Err(_) => {
                     ui.memory().open_popup(plain_error);
                     self.plaintext_texture = Option::None;
-                },
-            }  
+                }
+            }
         }
         if let Some(texture) = &self.plaintext_texture {
             ui.image(texture, texture.size_vec2());
@@ -69,10 +66,14 @@ impl View for HillEnc {
         if key_edit.changed() | plaintext_edit.changed() {
             self.ciphertext_texture = None;
         }
-        if !self.key.is_empty() && self.plaintext_texture.is_some() && self.ciphertext_texture.is_none(){
+        if !self.key.is_empty()
+            && self.plaintext_texture.is_some()
+            && self.ciphertext_texture.is_none()
+        {
             if self.valid_key() {
                 ui.memory().close_popup();
-                let vec_key: Vec<u32> = self.key
+                let vec_key: Vec<u32> = self
+                    .key
                     .split_whitespace()
                     .map(|s| u32::from_str_radix(s, 10).unwrap())
                     .collect();
@@ -80,7 +81,7 @@ impl View for HillEnc {
                 match vec_key.len() {
                     9 => size = 3,
                     16 => size = 4,
-                    _ => size = 3
+                    _ => size = 3,
                 }
                 let mut key_matrix: Vec<Vec<u32>> = vec![vec![0; size]; size];
                 for i in 0..size {
@@ -89,18 +90,21 @@ impl View for HillEnc {
                     }
                 }
                 let image_plain = image::io::Reader::open(std::path::Path::new(&self.plaintext))
-                    .unwrap().decode().unwrap();
+                    .unwrap()
+                    .decode()
+                    .unwrap();
                 let new_image_buffer = HillEnc::hill_cipher(image_plain, &key_matrix);
-                self.ciphertext_texture = Some(
-                    ui.ctx().load_texture(
-                        "ciphertext_image",
-                        egui::ColorImage::from_rgba_unmultiplied(
-                            [new_image_buffer.dimensions().0 as usize, new_image_buffer.dimensions().1 as usize],
-                            new_image_buffer.as_flat_samples().as_slice()
-                        ),
-                        egui::TextureFilter::Linear
-                    )
-                );
+                self.ciphertext_texture = Some(ui.ctx().load_texture(
+                    "ciphertext_image",
+                    egui::ColorImage::from_rgba_unmultiplied(
+                        [
+                            new_image_buffer.dimensions().0 as usize,
+                            new_image_buffer.dimensions().1 as usize,
+                        ],
+                        new_image_buffer.as_flat_samples().as_slice(),
+                    ),
+                    egui::TextureFilter::Linear,
+                ));
                 self.ciphertext_buffer = Some(new_image_buffer);
             } else {
                 ui.memory().open_popup(key_error);
@@ -109,14 +113,21 @@ impl View for HillEnc {
         if let Some(texture) = &self.ciphertext_texture {
             ui.image(texture, texture.size_vec2());
         }
-        if ui.add(egui::Button::new("Save")).clicked() { 
+        if ui.add(egui::Button::new("Save")).clicked() {
             if let Some(buffer) = &self.ciphertext_buffer {
-                let end = self.plaintext.split("/").last().unwrap().rsplit(".").last().unwrap();
-                buffer.save(
-                    std::path::Path::new(
-                        &self.plaintext.replace(end, &format!("{}{}", end, "cipher"))
-                    )
-                ).unwrap();
+                let end = self
+                    .plaintext
+                    .split("/")
+                    .last()
+                    .unwrap()
+                    .rsplit(".")
+                    .last()
+                    .unwrap();
+                buffer
+                    .save(std::path::Path::new(
+                        &self.plaintext.replace(end, &format!("{}{}", end, "cipher")),
+                    ))
+                    .unwrap();
             }
         }
         egui::popup_below_widget(ui, plain_error, &plaintext_edit, |ui| {
@@ -125,11 +136,10 @@ impl View for HillEnc {
         egui::popup_below_widget(ui, key_error, &key_edit, |ui| {
             ui.code("key must be 9 or 16 integers separated with spaces")
         });
-
     }
 }
 
-fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, image::ImageError>  {
+fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, image::ImageError> {
     let image = image::io::Reader::open(path)?.decode()?;
     let size = [image.width() as _, image.height() as _];
     let image_buffer = image.to_rgba8();
@@ -143,25 +153,27 @@ fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, imag
 impl HillEnc {
     fn valid_key(&self) -> bool {
         let mut answer = !self.key.is_empty()
-        && self.key
-            .chars()
-            .all(|c| c.is_ascii_whitespace() || c.is_ascii_digit());
-        let splited_transformed: Vec<u32> = self.key
+            && self
+                .key
+                .chars()
+                .all(|c| c.is_ascii_whitespace() || c.is_ascii_digit());
+        let splited_transformed: Vec<u32> = self
+            .key
             .split_whitespace()
             .map(|s| u32::from_str_radix(s, 10).unwrap())
             .collect();
-        answer = answer 
-        && (splited_transformed.len() == 9 
-            || splited_transformed.len() == 16);
-        answer = answer && splited_transformed.iter()
-            .all(|x| &0 <= x && x <= &255);
-        answer 
+        answer = answer && (splited_transformed.len() == 9 || splited_transformed.len() == 16);
+        answer = answer && splited_transformed.iter().all(|x| &0 <= x && x <= &255);
+        answer
     }
-    fn hill_cipher(plain_image: image::DynamicImage, key: &Vec<Vec<u32>>) -> ImageBuffer<image::Rgba<u8>, Vec<u8>>{
+    fn hill_cipher(
+        plain_image: image::DynamicImage,
+        key: &Vec<Vec<u32>>,
+    ) -> ImageBuffer<image::Rgba<u8>, Vec<u8>> {
         let plain_image_resize = plain_image.resize_exact(
             plain_image.dimensions().0 / key.len() as u32 * key.len() as u32,
             plain_image.dimensions().1 / key.len() as u32 * key.len() as u32,
-            image::imageops::FilterType::Gaussian
+            image::imageops::FilterType::Gaussian,
         );
         let (w, h) = plain_image_resize.dimensions();
         let mut new_image = ImageBuffer::new(w, h);
@@ -182,13 +194,14 @@ impl HillEnc {
                     for j in 0..key.len() {
                         let (px, py, _) = accumulator[i * key.len() + j];
                         new_image.put_pixel(
-                            px, py,
+                            px,
+                            py,
                             image::Rgba([
                                 new_pixels[i][j] as u8,
                                 new_pixels[i][j] as u8,
                                 new_pixels[i][j] as u8,
-                                100
-                            ])
+                                100,
+                            ]),
                         );
                     }
                 }
